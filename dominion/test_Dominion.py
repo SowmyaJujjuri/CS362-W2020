@@ -5,15 +5,15 @@ import Dominion
 
 class TestPlayer(TestCase):
     def setUp(self):
-        player_names = ["Annie"]
+        self.player_names = ["Annie", "*Ben", "*Carla"]
         # Data setup
-        if len(player_names) > 2:
-            nV = 12
+        if len(self.player_names) > 2:
+            self.nV = 12
         else:
-            nV = 8
-        nC = -10 + 10 * len(player_names)
+            self.nV = 8
+        self.nC = -10 + 10 * len(self.player_names)
 
-        box = testUtility.getBoxes(nV)
+        self.box = testUtility.getBoxes(self.nV)
 
         supply_order = {0: ['Curse', 'Copper'], 2: ['Estate', 'Cellar', 'Chapel', 'Moat'],
                         3: ['Silver', 'Chancellor', 'Village', 'Woodcutter', 'Workshop'],
@@ -22,25 +22,77 @@ class TestPlayer(TestCase):
                         5: ['Duchy', 'Market', 'Council Room', 'Festival', 'Laboratory', 'Library', 'Mine', 'Witch'],
                         6: ['Gold', 'Adventurer'], 8: ['Province']}
 
-        supply = testUtility.getSupply(nV, player_names, box, nC)
+        self.supply = testUtility.getSupply(self.nV, self.player_names, self.box, self.nC)
         # initialize the trash
-        trash = []
-        players = testUtility.constructPlayer(player_names)
-        testUtility.playGame(supply, supply_order, players, trash)
-        testUtility.finalScore(players)
+        self.trash = []
+        self.players = testUtility.constructPlayer(self.player_names)
+        # testUtility.playGame(supply, supply_order, players, trash)
+        # testUtility.finalScore(players)
+
 
     def test_init(self):
         self.setUp()
 
-        name = "Annie"
+        self.name = "Annie"
 
-        player = Dominion.Player(self.name)
+        self.player = Dominion.Player(self.name)
 
-        self.assertEqual(name, player.name)
+        self.assertEqual(self.name, self.player.name)
+
+    def test_draw(self):
+        self.setUp()
+        self.test_init()
+
+        self.coins = 1
+        self.buys = 0
+        self.actions = 0
+        self.cards = 0
+        self.cost = 0
+        self.name = "Woodcutter"
+
+        actionCard = Dominion.Action_card(self.name, self.cost, self.actions, self.cards, self.buys, self.coins)
+
+        self.player.deck = []
+        self.player.discard.append(actionCard)
+        hand = len(self.player.hand)
+
+        card = self.player.draw()
+
+        self.assertEqual(0, len(self.player.deck))
+        self.assertEqual(0, len(self.player.discard))
+        self.assertEqual(hand+1, len(self.player.hand))
 
     def test_action_balance(self):
-        balance = 0
-        for c in self.stack():
-            if c.category == "action":
-                balance = balance - 1 + c.actions
-        return 70 * balance / len(self.stack())
+        self.setUp()
+        self.test_init()
+        self.assertEqual(0, self.player.action_balance())
+
+    def test_cardsummary(self):
+        self.setUp()
+        self.test_init()
+
+        self.coins = 1
+        self.buys = 0
+        self.actions = 0
+        self.cards = 0
+        self.cost = 0
+        self.name = "Woodcutter"
+
+        actionCard = Dominion.Action_card(self.name, self.cost, self.actions, self.cards, self.buys, self.coins)
+
+        self.player.deck = []
+        self.player.hand = []
+
+
+        self.player.hand.append(actionCard)
+
+        summary = self.player.cardsummary()
+
+        self.assertEqual(1, summary["Woodcutter"])
+        self.assertEqual(0, summary["VICTORY POINTS"])
+
+    def test_calcpoints(self):
+        self.setUp()
+        self.test_init()
+
+        self.assertEqual(3, self.player.calcpoints())
